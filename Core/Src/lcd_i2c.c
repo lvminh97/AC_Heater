@@ -64,9 +64,9 @@ void lcd_clear(void){
 	lcd_send_cmd(0x01); //clear display
 }
 
-void lcd_goto_xy(int row, int col){
+void lcd_goto_xy(int col, int row){
 	uint8_t pos_addr = 0x80;
-	if(row == 2) 
+	if(row == 1) 
 		pos_addr |= 0x40;
 	pos_addr += col;
 	lcd_send_cmd(pos_addr);

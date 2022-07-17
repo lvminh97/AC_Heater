@@ -45,7 +45,9 @@ I2C_HandleTypeDef hi2c1;
 SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
+float temp = 0;
 
+char tmp[20];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -93,16 +95,25 @@ int main(void)
   MX_SPI1_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-
+	lcd_init(&hi2c1);
+	lcd_send_string("AC Heater");
+	HAL_Delay(2000);		// delay 2sec
+	lcd_clear();
+	lcd_send_string("Temp: ");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		temp = max6675_get_temp(&hspi1);
+		lcd_goto_xy(6, 0);
+		sprintf(tmp, "%.2f oC    ", temp);
+		lcd_send_string(tmp);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
