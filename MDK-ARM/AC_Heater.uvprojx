@@ -402,6 +402,11 @@
               <FileType>5</FileType>
               <FilePath>..\Core\Inc\lcd_i2c.h</FilePath>
             </File>
+            <File>
+              <FileName>max6675.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Inc\max6675.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -426,6 +431,11 @@
               <FileName>lcd_i2c.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\lcd_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>max6675.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\max6675.c</FilePath>
             </File>
           </Files>
         </Group>
