@@ -62,14 +62,17 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define DEC_BTN_Pin GPIO_PIN_12
 #define DEC_BTN_GPIO_Port GPIOB
+#define DEC_BTN_EXTI_IRQn EXTI15_10_IRQn
 #define INC_BTN_Pin GPIO_PIN_13
 #define INC_BTN_GPIO_Port GPIOB
+#define INC_BTN_EXTI_IRQn EXTI15_10_IRQn
 #define SPI1_CS_Pin GPIO_PIN_14
 #define SPI1_CS_GPIO_Port GPIOB
 #define PULSE_Pin GPIO_PIN_15
 #define PULSE_GPIO_Port GPIOB
 #define ZERO_DETECT_Pin GPIO_PIN_9
 #define ZERO_DETECT_GPIO_Port GPIOA
+#define ZERO_DETECT_EXTI_IRQn EXTI9_5_IRQn
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
