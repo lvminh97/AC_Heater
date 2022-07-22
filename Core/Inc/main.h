@@ -35,6 +35,7 @@ extern "C" {
 #include "stdio.h"
 #include "lcd_i2c.h"
 #include "max6675.h"
+#include "dwt.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
