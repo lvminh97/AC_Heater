@@ -53,7 +53,7 @@ SPI_HandleTypeDef hspi1;
 float temp = 0, target_temp = 0;
 float P = 0, I = 0, D = 0, PID = 0, error, prev_error;
 uint8_t zero_detect = 0;
-uint32_t timer_500ms, pid_time;
+uint32_t timer_500ms, pid_time, timer_inc_btn, timer_dec_btn;
 char tmp[20];
 /* USER CODE END PV */
 
@@ -63,6 +63,7 @@ static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 void PID_Controller(void);
 /* USER CODE END PFP */
 
@@ -111,6 +112,8 @@ int main(void)
 	dwt_init();
 	timer_500ms = 0;
 	pid_time = 0;
+	timer_inc_btn = 0;
+	timer_dec_btn = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -303,11 +306,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		zero_detect = 1;
 	}
 	else if(GPIO_Pin == INC_BTN_Pin){		// increase the target temp
-		target_temp += 1.0;
+		if(get_millis() - timer_inc_btn >= 200){		// debouncing
+			target_temp += 1.0;
+			timer_inc_btn = get_millis();
+		}
 	}
 	else if(GPIO_Pin == DEC_BTN_Pin){		// decrease the target temp
-		if(target_temp >= 1.0){
+		if(get_millis() - timer_dec_btn >= 200 && target_temp >= 1.0){	// debouncing
 			target_temp -= 1.0;
+			timer_dec_btn = get_millis();
 		}
 	}
 }
