@@ -32,6 +32,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define	KP	203.0
+#define	KI	1.04
+#define	KD	2.2
+#define MAX_PID	7400		// 7400us
+#define MIN_PID	0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -45,8 +50,10 @@ I2C_HandleTypeDef hi2c1;
 SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
-float temp = 0;
-
+float temp = 0, target_temp = 0;
+float P = 0, I = 0, D = 0, PID = 0, error, prev_error;
+uint8_t zero_detect = 0;
+uint32_t timer_500ms, pid_time;
 char tmp[20];
 /* USER CODE END PV */
 
@@ -56,7 +63,7 @@ static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-
+void PID_Controller(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -99,21 +106,39 @@ int main(void)
 	lcd_send_string("AC Heater");
 	HAL_Delay(2000);		// delay 2sec
 	lcd_clear();
-	lcd_send_string("Temp: ");
+	lcd_send_string("Target: ");
+	lcd_goto_xy(0, 1);
+	lcd_send_string("Actual: ");
+	
+	timer_500ms = 0;
+	pid_time = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		temp = max6675_get_temp(&hspi1);
-		lcd_goto_xy(6, 0);
-		sprintf(tmp, "%.2f oC    ", temp);
-		lcd_send_string(tmp);
+		if(get_millis() - timer_500ms >= 500){
+			temp = max6675_get_temp(&hspi1);
+			lcd_goto_xy(7, 0);
+			sprintf(tmp, "%.1foC    ", target_temp);
+			lcd_send_string(tmp);
+			lcd_goto_xy(7, 1);
+			sprintf(tmp, "%.1foC    ", temp);
+			lcd_send_string(tmp);
+			PID_Controller();
+			
+			timer_500ms = get_millis();
+		}
+		if(zero_detect == 1){
+			delay_us(MAX_PID - PID);
+			HAL_GPIO_WritePin(PULSE_GPIO_Port, PULSE_Pin, GPIO_PIN_SET);
+			delay_us(100);
+			HAL_GPIO_WritePin(PULSE_GPIO_Port, PULSE_Pin, GPIO_PIN_RESET);
+			zero_detect = 0;
+		}
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
-		HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -247,7 +272,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : DEC_BTN_Pin INC_BTN_Pin */
   GPIO_InitStruct.Pin = DEC_BTN_Pin|INC_BTN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -260,14 +285,57 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : ZERO_DETECT_Pin */
   GPIO_InitStruct.Pin = ZERO_DETECT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(ZERO_DETECT_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	if(GPIO_Pin == ZERO_DETECT_Pin){
+		zero_detect = 1;
+	}
+	else if(GPIO_Pin == INC_BTN_Pin){		// increase the target temp
+		target_temp += 1.0;
+	}
+	else if(GPIO_Pin == DEC_BTN_Pin){		// decrease the target temp
+		if(target_temp >= 1.0){
+			target_temp -= 1.0;
+		}
+	}
+}
 
+void PID_Controller(void){
+	error = target_temp - temp;
+	
+	P = KP * error;
+	
+	if(error > 30){
+		I = 0;
+	}
+	I += KI * error;
+	
+	D = KD * ((error - prev_error) / ((get_millis() - pid_time) / 1000.0));
+	
+	PID = P + I + D;
+	if(PID > MAX_PID){
+		PID = MAX_PID;
+	}
+	else if(PID < MIN_PID){
+		PID = MIN_PID;
+	}
+	
+	pid_time = get_millis();
+	prev_error = error;
+}
 /* USER CODE END 4 */
 
 /**

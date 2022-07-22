@@ -62,6 +62,7 @@ void lcd_send_string(char *str){
 
 void lcd_clear(void){
 	lcd_send_cmd(0x01); //clear display
+	lcd_goto_xy(0, 0);	//move cursor to (0,0) coordinate 
 }
 
 void lcd_goto_xy(int col, int row){
