@@ -247,7 +247,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : DEC_BTN_Pin INC_BTN_Pin */
   GPIO_InitStruct.Pin = DEC_BTN_Pin|INC_BTN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -260,7 +260,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : ZERO_DETECT_Pin */
   GPIO_InitStruct.Pin = ZERO_DETECT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(ZERO_DETECT_GPIO_Port, &GPIO_InitStruct);
 
@@ -274,7 +274,19 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	if(GPIO_Pin == ZERO_DETECT_Pin){
+		zero_detect = 1;
+	}
+	else if(GPIO_Pin == INC_BTN_Pin){		// increase the target temp
+		target_temp += 1.0;
+	}
+	else if(GPIO_Pin == DEC_BTN_Pin){		// decrease the target temp
+		if(target_temp >= 1.0){
+			target_temp -= 1.0;
+		}
+	}
+}
 /* USER CODE END 4 */
 
 /**
