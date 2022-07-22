@@ -106,10 +106,9 @@ int main(void)
 	lcd_send_string("AC Heater");
 	HAL_Delay(2000);		// delay 2sec
 	lcd_clear();
-	lcd_send_string("Target: ");
-	lcd_goto_xy(0, 1);
-	lcd_send_string("Actual: ");
+	lcd_send_string("Temp: ");
 	
+	dwt_init();
 	timer_500ms = 0;
 	pid_time = 0;
   /* USER CODE END 2 */
@@ -120,11 +119,11 @@ int main(void)
   {
 		if(get_millis() - timer_500ms >= 500){
 			temp = max6675_get_temp(&hspi1);
-			lcd_goto_xy(7, 0);
-			sprintf(tmp, "%.1foC    ", target_temp);
+			lcd_goto_xy(9, 0);
+			sprintf(tmp, "%.0f", temp);
 			lcd_send_string(tmp);
-			lcd_goto_xy(7, 1);
-			sprintf(tmp, "%.1foC    ", temp);
+			lcd_goto_xy(12, 0);
+			sprintf(tmp, "%.0f", target_temp);
 			lcd_send_string(tmp);
 			PID_Controller();
 			
