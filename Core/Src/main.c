@@ -50,10 +50,10 @@ I2C_HandleTypeDef hi2c1;
 SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
-float temp = 0, target_temp = 0;
+float temp = 0, target_temp = 45;
 float P = 0, I = 0, D = 0, PID = 0, error, prev_error;
-uint8_t zero_detect = 0;
-uint32_t timer_500ms, pid_time, timer_inc_btn, timer_dec_btn;
+uint8_t zero_detect = 0, lcd_update = 0;
+uint32_t timer_1s, pid_time, timer_inc_btn, timer_dec_btn;
 char tmp[20];
 /* USER CODE END PV */
 
@@ -110,7 +110,7 @@ int main(void)
 	lcd_send_string("Temp: ");
 	
 	dwt_init();
-	timer_500ms = 0;
+	timer_1s = 0;
 	pid_time = 0;
 	timer_inc_btn = 0;
 	timer_dec_btn = 0;
@@ -120,17 +120,20 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		if(get_millis() - timer_500ms >= 500){
+		if(get_millis() - timer_1s >= 1000){
 			temp = max6675_get_temp(&hspi1);
-			lcd_goto_xy(9, 0);
-			sprintf(tmp, "%.0f", temp);
-			lcd_send_string(tmp);
-			lcd_goto_xy(12, 0);
-			sprintf(tmp, "%.0f", target_temp);
-			lcd_send_string(tmp);
+			lcd_update = 1;
 			PID_Controller();
-			
-			timer_500ms = get_millis();
+			timer_1s = get_millis();
+		}
+		if(lcd_update == 1){
+			lcd_goto_xy(6, 0);
+			sprintf(tmp, "%.0f     ", temp);
+			lcd_send_string(tmp);
+			lcd_goto_xy(11, 0);
+			sprintf(tmp, "%.0f     ", target_temp);
+			lcd_send_string(tmp);
+			lcd_update = 0;
 		}
 		if(zero_detect == 1){
 			delay_us(MAX_PID - PID);
@@ -308,12 +311,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	else if(GPIO_Pin == INC_BTN_Pin){		// increase the target temp
 		if(get_millis() - timer_inc_btn >= 200){		// debouncing
 			target_temp += 1.0;
+			lcd_update = 1;
 			timer_inc_btn = get_millis();
 		}
 	}
 	else if(GPIO_Pin == DEC_BTN_Pin){		// decrease the target temp
 		if(get_millis() - timer_dec_btn >= 200 && target_temp >= 1.0){	// debouncing
 			target_temp -= 1.0;
+			lcd_update = 1;
 			timer_dec_btn = get_millis();
 		}
 	}
