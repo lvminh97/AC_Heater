@@ -33,8 +33,8 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define	KP	203.0
-#define	KI	1.04
-#define	KD	2.2
+#define	KI	7.2
+#define	KD	1.04
 #define MAX_PID	7400		// 7400us
 #define MIN_PID	0
 /* USER CODE END PD */
@@ -301,6 +301,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 void PID_Controller(void){
 	error = target_temp - temp;
+	
+	if(fabs(error) <= 0.5)
+		return;
 	
 	P = KP * error;
 	
