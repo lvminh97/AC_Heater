@@ -47,20 +47,17 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
-SPI_HandleTypeDef hspi1;
-
 /* USER CODE BEGIN PV */
 float temp = 0, target_temp = 45;
 float P = 0, I = 0, D = 0, PID = 0, error, prev_error;
 uint8_t zero_detect = 0, lcd_update = 0;
-uint32_t timer_1s, pid_time, timer_inc_btn, timer_dec_btn;
+uint32_t timer_500ms, pid_time, timer_inc_btn, timer_dec_btn;
 char tmp[20];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_SPI1_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
@@ -100,7 +97,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_SPI1_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 	lcd_init(&hi2c1);
@@ -110,7 +106,7 @@ int main(void)
 	lcd_send_string("Temp: ");
 	
 	dwt_init();
-	timer_1s = 0;
+	timer_500ms = 0;
 	pid_time = 0;
 	timer_inc_btn = 0;
 	timer_dec_btn = 0;
@@ -120,11 +116,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		if(get_millis() - timer_1s >= 1000){
-			temp = max6675_get_temp(&hspi1);
+		if(get_millis() - timer_500ms >= 500){
+			temp = max6675_get_temp();
 			lcd_update = 1;
 			PID_Controller();
-			timer_1s = get_millis();
+			timer_500ms = get_millis();
 		}
 		if(lcd_update == 1){
 			lcd_goto_xy(6, 0);
@@ -143,6 +139,7 @@ int main(void)
 			zero_detect = 0;
 		}
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -221,44 +218,6 @@ static void MX_I2C1_Init(void)
 }
 
 /**
-  * @brief SPI1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SPI1_Init(void)
-{
-
-  /* USER CODE BEGIN SPI1_Init 0 */
-
-  /* USER CODE END SPI1_Init 0 */
-
-  /* USER CODE BEGIN SPI1_Init 1 */
-
-  /* USER CODE END SPI1_Init 1 */
-  /* SPI1 parameter configuration*/
-  hspi1.Instance = SPI1;
-  hspi1.Init.Mode = SPI_MODE_MASTER;
-  hspi1.Init.Direction = SPI_DIRECTION_2LINES_RXONLY;
-  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
-  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi1.Init.CRCPolynomial = 10;
-  if (HAL_SPI_Init(&hspi1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SPI1_Init 2 */
-
-  /* USER CODE END SPI1_Init 2 */
-
-}
-
-/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -273,7 +232,23 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPI1_SCK_GPIO_Port, SPI1_SCK_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SPI1_CS_Pin|PULSE_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : SPI1_SCK_Pin */
+  GPIO_InitStruct.Pin = SPI1_SCK_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SPI1_SCK_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SPI1_MISO_Pin */
+  GPIO_InitStruct.Pin = SPI1_MISO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SPI1_MISO_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : DEC_BTN_Pin INC_BTN_Pin */
   GPIO_InitStruct.Pin = DEC_BTN_Pin|INC_BTN_Pin;
