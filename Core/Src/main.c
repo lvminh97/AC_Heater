@@ -132,7 +132,7 @@ int main(void)
 			lcd_update = 0;
 		}
 		if(zero_detect == 1){
-			delay_us(MAX_PID - PID);
+			delay_us((uint64_t)PID);
 			HAL_GPIO_WritePin(PULSE_GPIO_Port, PULSE_Pin, GPIO_PIN_SET);
 			delay_us(100);
 			HAL_GPIO_WritePin(PULSE_GPIO_Port, PULSE_Pin, GPIO_PIN_RESET);
@@ -302,8 +302,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 void PID_Controller(void){
 	error = target_temp - temp;
 	
-	if(fabs(error) <= 0.5)
+	if(fabs(error) <= 0.5){
+		I = 0;
+		PID = 0;
 		return;
+	}
 	
 	P = KP * error;
 	
