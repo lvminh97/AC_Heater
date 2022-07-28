@@ -62,13 +62,12 @@ void lcd_send_string(char *str){
 
 void lcd_clear(void){
 	lcd_send_cmd(0x01); //clear display
-	lcd_goto_xy(0, 0);	//move cursor to (0,0) coordinate 
+	HAL_Delay(5);
 }
 
 void lcd_goto_xy(int col, int row){
 	uint8_t pos_addr = 0x80;
-	if(row == 1) 
-		pos_addr |= 0x40;
-	pos_addr += col;
+	pos_addr |= row << 6;
+	pos_addr |= col;
 	lcd_send_cmd(pos_addr);
 }

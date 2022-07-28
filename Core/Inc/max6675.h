@@ -3,6 +3,6 @@
 
 #include "stm32f1xx_hal.h"
 
-float max6675_get_temp(SPI_HandleTypeDef *hspi);
+float max6675_get_temp(void);
 
 #endif

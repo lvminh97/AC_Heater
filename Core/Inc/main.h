@@ -33,6 +33,7 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
+#include "math.h"
 #include "lcd_i2c.h"
 #include "max6675.h"
 #include "dwt.h"
@@ -61,6 +62,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SPI1_SCK_Pin GPIO_PIN_5
+#define SPI1_SCK_GPIO_Port GPIOA
+#define SPI1_MISO_Pin GPIO_PIN_6
+#define SPI1_MISO_GPIO_Port GPIOA
 #define DEC_BTN_Pin GPIO_PIN_12
 #define DEC_BTN_GPIO_Port GPIOB
 #define DEC_BTN_EXTI_IRQn EXTI15_10_IRQn
